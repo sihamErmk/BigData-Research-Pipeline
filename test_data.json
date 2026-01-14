@@ -1,3 +1,0 @@
-[
-{"source": "Test", "mot_cle_recherche": "test", "titre": "Test Article", "lien": "https://httpbin.org/html", "auteurs": ["Test Author"], "annee": "2024", "abstract": "This is a test to verify the scraper works"}
-]

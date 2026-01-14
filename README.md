@@ -1,113 +1,134 @@
 # Research Article Scraper
 
-## Description
-Web scraper pour collecter les métadonnées d'articles scientifiques depuis IEEE, ACM et ScienceDirect.
+Scrapy-based web scraper for collecting academic articles from multiple sources.
 
-## Structure du Projet
+## 📊 Data Sources
+
+| Source | Status | Articles/Keyword | Notes |
+|--------|--------|------------------|-------|
+| **arXiv** | ✅ Working | 50 | API-based, no CAPTCHA |
+| **IEEE** | ✅ Working | 250 (10 pages) | Selenium required |
+| **Google Scholar** | ⚠️ Limited | 20 | May trigger CAPTCHA |
+| **ACM** | ❌ Blocked | - | Cloudflare protection |
+| **ScienceDirect** | ❌ Blocked | - | Cloudflare protection |
+
+## 🚀 Quick Start
+
+### Prerequisites
+```bash
+pip install scrapy pymongo selenium webdriver-manager
+```
+
+### MongoDB Setup
+```bash
+# Start MongoDB
+mongod
+
+# Verify connection
+mongosh
+use research_db
+```
+
+### Run Scrapers
+```bash
+# Best option - arXiv (no CAPTCHA)
+python -m scrapy crawl arxiv
+
+# IEEE (with pagination)
+python -m scrapy crawl ieee
+
+# Google Scholar (use sparingly)
+python -m scrapy crawl scholar
+```
+
+## 📁 Project Structure
 ```
 Data scraper/
 ├── spiders/
-│   ├── __init__.py
-│   ├── acm_spider.py
-│   ├── ieee_spider.py
-│   └── sciencedirect_spider.py
-├── items.py
-├── pipelines.py
-├── selenium_middleware.py
-├── settings.py
+│   ├── arxiv_spider.py          # ✅ Recommended
+│   ├── ieee_spider.py           # ✅ Works well
+│   ├── scholar_spider.py        # ⚠️ CAPTCHA risk
+│   ├── acm_spider.py            # ❌ Blocked
+│   └── sciencedirect_spider.py  # ❌ Blocked
+├── items.py                     # Data structure
+├── pipelines.py                 # MongoDB pipeline
+├── selenium_middleware.py       # Browser automation
+├── settings.py                  # Scrapy config
 └── scrapy.cfg
 ```
 
-## Installation
+## 🔧 Configuration
 
-### 1. Installer les dépendances
-```bash
-pip install scrapy selenium pymongo
-```
-
-### 2. Installer MongoDB
-- Télécharger: https://www.mongodb.com/try/download/community
-- Installer et démarrer le service MongoDB
-
-### 3. Vérifier MongoDB
-```bash
-# Windows
-net start MongoDB
-
-# Vérifier la connexion
-mongosh
-```
-
-## Utilisation
-
-### Scraper avec sortie JSON (sans MongoDB)
-```bash
-# ACM
-python -m scrapy crawl acm -O acm_data.json
-
-# IEEE
-python -m scrapy crawl ieee -O ieee_data.json
-
-# ScienceDirect
-python -m scrapy crawl sciencedirect -O sciencedirect_data.json
-```
-
-### Scraper avec MongoDB (activé par défaut)
-```bash
-# Les données seront automatiquement stockées dans MongoDB
-python -m scrapy crawl acm
-python -m scrapy crawl ieee
-python -m scrapy crawl sciencedirect
-```
-
-### Voir le navigateur pendant le scraping
-Dans `settings.py`, ajouter:
+### Keywords
+Edit keywords in each spider file:
 ```python
-SELENIUM_HEADLESS = False
-```
-
-### Consulter les données dans MongoDB
-```bash
-mongosh
-use research_db
-db.articles.find().pretty()
-db.articles.countDocuments()
-```
-
-## Configuration
-
-### Mots-clés de recherche
-Modifier dans chaque spider:
-```python
-keywords = ['Blockchain', 'Deep Learning', 'Big Data']
+keywords = ['Machine Learning', 'Deep Learning', 'AI']
 ```
 
 ### MongoDB
-Dans `settings.py`:
+Edit in `settings.py`:
 ```python
 MONGO_URI = 'mongodb://localhost:27017/'
 MONGO_DATABASE = 'research_db'
 ```
 
-### Délai entre requêtes
-Dans `settings.py`:
-```python
-DOWNLOAD_DELAY = 3  # secondes
+## 📈 Expected Results
+
+- **arXiv**: ~1,500 articles (30 keywords × 50)
+- **IEEE**: ~2,250 articles (9 keywords × 250)
+- **Scholar**: ~500 articles (25 keywords × 20)
+- **Total**: ~4,250 articles
+
+## 🛡️ Anti-Detection
+
+- Random delays between requests
+- Selenium with anti-detection scripts
+- Cookie acceptance automation
+- Human-like scrolling behavior
+
+## 📊 View Data
+
+```bash
+# MongoDB Shell
+mongosh
+use research_db
+db.articles.countDocuments()
+db.articles.find().limit(5)
+
+# Export to JSON
+mongoexport --db=research_db --collection=articles --out=articles.json
+
+# Export to CSV
+mongoexport --db=research_db --collection=articles --type=csv --fields=titre,auteurs,annee,source --out=articles.csv
 ```
 
-## Données Collectées
-- Source (IEEE, ACM, ScienceDirect)
-- Mot-clé de recherche
-- Titre
-- Lien
-- Auteurs
-- Année
-- Abstract
-- Journal
-- Date de scraping
+## ⚠️ Important Notes
 
-## Notes
-- Les sites peuvent bloquer les requêtes trop fréquentes
-- Selenium télécharge automatiquement ChromeDriver
-- Limite: 10 articles par mot-clé par défaut
-- Respecter les conditions d'utilisation des sites
+1. **Use arXiv as primary source** - Most reliable, no CAPTCHA
+2. **IEEE requires Selenium** - Browser will open automatically
+3. **Respect rate limits** - Don't scrape too aggressively
+4. **ACM/ScienceDirect blocked** - Use their official APIs instead
+5. **Duplicates handled** - MongoDB unique index on `lien` field
+
+## 🐛 Troubleshooting
+
+### CAPTCHA Issues
+- Increase `DOWNLOAD_DELAY` in settings.py
+- Use `SELENIUM_HEADLESS = False` to solve manually
+- Switch to arXiv (no CAPTCHA)
+
+### MongoDB Connection Error
+```bash
+# Check if MongoDB is running
+mongosh --eval "db.version()"
+```
+
+### Selenium ChromeDriver Issues
+```bash
+# Reinstall webdriver-manager
+pip install --upgrade webdriver-manager
+```
+
+## 📝 License
+
+Educational use only. Respect robots.txt and terms of service.

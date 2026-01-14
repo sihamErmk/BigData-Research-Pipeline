@@ -10,7 +10,8 @@ ROBOTSTXT_OBEY = False
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 
 # Configure delays
-DOWNLOAD_DELAY = 2
+DOWNLOAD_DELAY = 10
+CONCURRENT_REQUESTS = 1
 COOKIES_ENABLED = True
 
 # Request headers
@@ -19,7 +20,7 @@ DEFAULT_REQUEST_HEADERS = {
     'Accept-Language': 'en-US,en;q=0.9',
 }
 
-# Enable Selenium middleware for JavaScript-heavy sites
+# Enable Selenium middleware
 DOWNLOADER_MIDDLEWARES = {
     'selenium_middleware.SeleniumMiddleware': 800,
 }
@@ -39,3 +40,6 @@ FEED_EXPORT_ENCODING = 'utf-8'
 # Twisted reactor
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
+
+# Selenium headless mode (set to False to see browser)
+SELENIUM_HEADLESS = False  # Désactivé pour résoudre CAPTCHA manuellement
