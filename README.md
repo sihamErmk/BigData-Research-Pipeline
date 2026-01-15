@@ -100,7 +100,23 @@ mongoexport --db=research_db --collection=articles --out=articles.json
 
 # Export to CSV
 mongoexport --db=research_db --collection=articles --type=csv --fields=titre,auteurs,annee,source --out=articles.csv
+
+# Or use the Python script
+python export_to_csv.py
 ```
+
+## 🧹 Data Cleaning
+
+After scraping, clean and analyze your data using our Kaggle notebook:
+
+**[📓 Data Processing Notebook](https://www.kaggle.com/code/errrrr13ee/data-processing)**
+
+The notebook includes:
+- Data cleaning and preprocessing
+- Duplicate removal
+- Missing value handling
+- Exploratory data analysis
+- Visualizations
 
 ## ⚠️ Important Notes
 
