@@ -1,0 +1,12 @@
+pyspark
+pymongo
+pandas
+numpy
+matplotlib
+seaborn
+plotly
+wordcloud
+flask
+flask-cors
+scikit-learn
+
