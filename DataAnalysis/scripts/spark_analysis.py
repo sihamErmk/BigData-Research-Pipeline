@@ -7,7 +7,6 @@ from pyspark.sql.functions import (
     collect_list, size, countDistinct, avg, sum as spark_sum,
     regexp_replace, when, lit
 )
-from pyspark.ml.feature import Tokenizer, StopWordsRemover, CountVectorizer, IDF
 import os
 
 # Create results directory if it doesn't exist
@@ -22,7 +21,7 @@ spark = SparkSession.builder \
     .appName("ScientificResearchAnalysis") \
     .config("spark.mongodb.read.connection.uri", "mongodb://127.0.0.1/recherche_scientifique.articles") \
     .config("spark.mongodb.write.connection.uri", "mongodb://127.0.0.1/recherche_scientifique.articles") \
-    .config("spark.jars.packages", "org.mongodb.spark:mongo-spark-connector_2.12:10.2.0") \
+    .config("spark.jars.packages", "org.mongodb.spark:mongo-spark-connector_2.12:10.1.1") \
     .getOrCreate()
 
 print("\n✓ Spark session créée avec succès!\n")
@@ -42,15 +41,44 @@ print("SCHÉMA DES DONNÉES")
 print("=" * 80)
 df.printSchema()
 
-# Show sample data
+# ============================================================================
+# FLATTEN THE DATAFRAME - EXTRACT NESTED FIELDS
+# ============================================================================
 print("\n" + "=" * 80)
+print("EXTRACTION DES CHAMPS IMBRIQUÉS")
+print("=" * 80)
+
+df_flat = df.select(
+    col("_id").alias("id"),
+    col("content.titre").alias("titre"),
+    col("content.categorie").alias("categorie"),
+    col("content.auteurs").alias("auteurs_array"),
+    col("metadata.source").alias("source"),
+    col("metadata.journal").alias("journal"),
+    col("metadata.annee").alias("annee")
+)
+
+# Convert authors array to comma-separated string
+from pyspark.sql.functions import concat_ws
+df_flat = df_flat.withColumn(
+    "auteurs",
+    concat_ws(", ", col("auteurs_array"))
+)
+
+# Drop the array column
+df_flat = df_flat.drop("auteurs_array")
+
+print("\n✓ Données aplaties avec succès!\n")
+
+# Show sample data
+print("=" * 80)
 print("ÉCHANTILLON DES DONNÉES (5 premiers enregistrements)")
 print("=" * 80)
-df.show(5, truncate=False)
+df_flat.show(5, truncate=False)
 
 # Get total count
-total_articles = df.count()
-print(f"\n📊 Total d'articles: {total_articles}\n")
+total_articles = df_flat.count()
+print(f"\n Total d'articles: {total_articles}\n")
 
 # ============================================================================
 # ANALYSE 1: STATISTIQUES DES PUBLICATIONS PAR ANNÉE
@@ -59,7 +87,7 @@ print("=" * 80)
 print("ANALYSE 1: PUBLICATIONS PAR ANNÉE")
 print("=" * 80)
 
-publications_par_annee = df.groupBy("annee") \
+publications_par_annee = df_flat.groupBy("annee") \
     .count() \
     .orderBy("annee") \
     .withColumnRenamed("count", "nombre_publications")
@@ -80,7 +108,7 @@ print("=" * 80)
 print("ANALYSE 2: PUBLICATIONS PAR CATÉGORIE")
 print("=" * 80)
 
-publications_par_categorie = df.groupBy("categorie") \
+publications_par_categorie = df_flat.groupBy("categorie") \
     .count() \
     .orderBy(desc("count")) \
     .withColumnRenamed("count", "nombre_publications")
@@ -88,7 +116,7 @@ publications_par_categorie = df.groupBy("categorie") \
 publications_par_categorie.show()
 
 # Calculate percentages
-total = df.count()
+total = df_flat.count()
 publications_par_categorie_pct = publications_par_categorie.withColumn(
     "pourcentage",
     (col("nombre_publications") / total * 100)
@@ -107,7 +135,7 @@ print("=" * 80)
 print("ANALYSE 3: PUBLICATIONS PAR SOURCE")
 print("=" * 80)
 
-publications_par_source = df.groupBy("source") \
+publications_par_source = df_flat.groupBy("source") \
     .count() \
     .orderBy(desc("count")) \
     .withColumnRenamed("count", "nombre_publications")
@@ -126,7 +154,7 @@ print("=" * 80)
 print("ANALYSE 4: ÉVOLUTION TEMPORELLE PAR CATÉGORIE")
 print("=" * 80)
 
-evolution_categorie = df.groupBy("annee", "categorie") \
+evolution_categorie = df_flat.groupBy("annee", "categorie") \
     .count() \
     .orderBy("annee", "categorie") \
     .withColumnRenamed("count", "nombre_publications")
@@ -146,9 +174,9 @@ print("ANALYSE 5: TOP AUTEURS")
 print("=" * 80)
 
 # Split authors by comma and explode
-df_authors = df.withColumn(
+df_authors = df_flat.withColumn(
     "auteur", 
-    explode(split(col("auteurs"), ","))
+    explode(split(col("auteurs"), ", "))
 )
 
 # Clean author names
@@ -184,9 +212,9 @@ print("=" * 80)
 print("ANALYSE 6: ANALYSE DES COLLABORATIONS")
 print("=" * 80)
 
-df_with_author_count = df.withColumn(
+df_with_author_count = df_flat.withColumn(
     "nombre_auteurs",
-    size(split(col("auteurs"), ","))
+    size(split(col("auteurs"), ", "))
 )
 
 # Articles with multiple authors (collaborations)
@@ -196,7 +224,7 @@ solo_articles = df_with_author_count.filter(col("nombre_auteurs") == 1)
 collab_stats = spark.createDataFrame([
     ("Collaborations (multiple auteurs)", collaborations.count()),
     ("Publications solo (1 auteur)", solo_articles.count()),
-    ("Total", df.count())
+    ("Total", df_flat.count())
 ], ["Type", "Nombre"])
 
 collab_stats.show()
@@ -213,7 +241,7 @@ print("=" * 80)
 print("ANALYSE 7: TENDANCES RÉCENTES (2020 et après)")
 print("=" * 80)
 
-tendances_recentes = df.filter(col("annee") >= 2020) \
+tendances_recentes = df_flat.filter(col("annee") >= 2020) \
     .groupBy("categorie") \
     .count() \
     .orderBy(desc("count")) \
@@ -234,12 +262,12 @@ print("ANALYSE 8: DÉTECTION DE SIGNAUX FAIBLES")
 print("=" * 80)
 
 # Compare 2016-2019 vs 2020-2025
-periode_ancienne = df.filter((col("annee") >= 2016) & (col("annee") <= 2019)) \
+periode_ancienne = df_flat.filter((col("annee") >= 2016) & (col("annee") <= 2019)) \
     .groupBy("categorie") \
     .count() \
     .withColumnRenamed("count", "count_old")
 
-periode_recente = df.filter((col("annee") >= 2020) & (col("annee") <= 2025)) \
+periode_recente = df_flat.filter((col("annee") >= 2020) & (col("annee") <= 2025)) \
     .groupBy("categorie") \
     .count() \
     .withColumnRenamed("count", "count_new")
@@ -276,10 +304,10 @@ print("=" * 80)
 
 metriques = spark.createDataFrame([
     ("Total Publications", total_articles),
-    ("Nombre de Catégories", df.select("categorie").distinct().count()),
-    ("Nombre de Sources", df.select("source").distinct().count()),
-    ("Année Min", df.agg({"annee": "min"}).collect()[0][0]),
-    ("Année Max", df.agg({"annee": "max"}).collect()[0][0]),
+    ("Nombre de Catégories", df_flat.select("categorie").distinct().count()),
+    ("Nombre de Sources", df_flat.select("source").distinct().count()),
+    ("Année Min", df_flat.agg({"annee": "min"}).collect()[0][0]),
+    ("Année Max", df_flat.agg({"annee": "max"}).collect()[0][0]),
     ("Nombre Total d'Auteurs Uniques", df_authors.select("auteur").distinct().count())
 ], ["Métrique", "Valeur"])
 
@@ -297,7 +325,7 @@ print("=" * 80)
 print("EXPORT DU DATASET COMPLET")
 print("=" * 80)
 
-df.toPandas().to_csv(
+df_flat.toPandas().to_csv(
     '../results/dataset_complet.csv',
     index=False
 )
