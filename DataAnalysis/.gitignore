@@ -1,0 +1,42 @@
+# Virtual Environment
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Data files (don't commit large files!)
+*.json
+*.csv
+data/
+*.xlsx
+
+# Results and outputs
+results/
+visualizations/
+*.png
+*.jpg
+*.html
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Backup files
+*~
+*.bak
