@@ -201,6 +201,12 @@ Ce projet est une application de Business Intelligence développée avec Streaml
    pip install -r requirements.txt
 
 
+## Screen pour freamwork complet par streamlit 
+<img width="1203" height="697" alt="screen-app1" src="https://github.com/user-attachments/assets/278b4e18-fcf8-4028-b533-849b51853834" />
+
+
+
+
 ## 📝 License
 
 Educational use only. Respect robots.txt and terms of service.
