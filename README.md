@@ -164,27 +164,27 @@ Ce projet est une application de Business Intelligence développée avec Streaml
 ## Aperçu du Dashboard
 
 ### Statistiques Globales
-![Distribution par Source](chart1.png)
+![alt text](Dashboard_BI/chart1.png)
 *Répartition des articles par source.*
 
-![Top 10 Mots-clés](chart2.png)
+![alt text](Dashboard_BI/chart2.png)
 *Les 10 mots-clés les plus fréquents.*
 
-![Evolution Temporelle](Chart3.png)
+![alt text](Dashboard_BI/chart3.png)
 *Progression historique des publications.*
 
 ### Analyses Spécifiques par Domaine
-![Analyse Data Mining](chart5.png)
+![alt text](Dashboard_BI/chart5.png)
 *Focus sur l'évolution du Data Mining.*
 
-![Analyse Artificial Intelligence](chart6.png)
+![alt text](Dashboard_BI/chart6.png)
 *Focus sur l'évolution de l'Intelligence Artificielle.*
 
-![Analyse Deep Learning](chart7.png)
+![alt text](Dashboard_BI/chart7.png)
 *Focus sur l'évolution du Deep Learning.*
 
 ### Collaborations et Auteurs
-![Top Auteurs](Chart4.png)
+![alt text](Dashboard_BI/chart4.png)
 *Classement des auteurs les plus prolifiques.*
 
 ## Technologies utilisées
