@@ -217,7 +217,7 @@ Ce projet est une application de Business Intelligence développée avec Streaml
 <img width="1201" height="672" alt="screen-app7" src="https://github.com/user-attachments/assets/22548367-b651-44f0-aef7-aea43a78e852" />
 
  ## remarque : 
-      video freamwork_streamlit (1).mp4 contient l'app complet 
+     - video freamwork_streamlit (1).mp4 contient l'app complet 
 
 
 
