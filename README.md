@@ -204,6 +204,20 @@ Ce projet est une application de Business Intelligence développée avec Streaml
 ## Screen pour freamwork complet par streamlit 
 <img width="1203" height="697" alt="screen-app1" src="https://github.com/user-attachments/assets/278b4e18-fcf8-4028-b533-849b51853834" />
 
+<img width="1202" height="685" alt="Screen-app2" src="https://github.com/user-attachments/assets/7588dcb0-95cf-4d87-b4d5-2d601a907290" />
+
+<img width="1190" height="647" alt="screen-app3" src="https://github.com/user-attachments/assets/3d3a7b5b-6bab-4406-a85e-093d2613a0ab" />
+
+<img width="1202" height="632" alt="screen-app4" src="https://github.com/user-attachments/assets/271cdfe5-c364-4144-8e86-d1e83776578c" />
+
+<img width="1205" height="672" alt="screen-app5" src="https://github.com/user-attachments/assets/16ba5a4d-7977-4707-8658-2f4976bdd434" />
+
+<img width="1195" height="653" alt="screen-app6" src="https://github.com/user-attachments/assets/9d97b84f-4ffd-41e0-844c-5019cc6c2b09" />
+
+<img width="1201" height="672" alt="screen-app7" src="https://github.com/user-attachments/assets/22548367-b651-44f0-aef7-aea43a78e852" />
+
+ ## remarque : 
+      video freamwork_streamlit (1).mp4 contient l'app complet 
 
 
 
