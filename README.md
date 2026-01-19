@@ -235,7 +235,7 @@ echo "✅ API: http://localhost:5000"
 | Taux collab | 67% |
 
 
-```
+
 
 ### Dashboard BI
 - Indicateurs clés (KPI) : Publications, Année Moyenne, nombre d'Auteurs et taux d'Abstracts.
