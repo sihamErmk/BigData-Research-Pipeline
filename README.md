@@ -145,6 +145,81 @@ mongosh --eval "db.version()"
 pip install --upgrade webdriver-manager
 ```
 
+# BigData Research Pipeline - Dashboard BI et Analyses Avancées
+
+Ce projet est une application de Business Intelligence développée avec Streamlit. Elle permet d'explorer, de filtrer et d'analyser des données issues de publications scientifiques stockées dans une base de données MongoDB.
+
+## Fonctionnalités principales
+
+### Dashboard BI
+- Indicateurs clés (KPI) : Publications, Année Moyenne, nombre d'Auteurs et taux d'Abstracts.
+- Répartition par Source : Visualisation des parts de marché des différentes plateformes.
+- Top 10 Mots-clés : Les thématiques les plus populaires dans la recherche.
+- Évolution Temporelle : Analyse du volume de publications par année.
+
+### Analyses Avancées
+- Analyse par Domaine : Exploration détaillée par mot-clé (Data Mining, AI, Deep Learning).
+- Collaborations Scientifiques : Identification des auteurs et partenariats les plus actifs.
+
+## Aperçu du Dashboard
+
+### Statistiques Globales
+![alt text](Dashboard_BI/chart1.png)
+*Répartition des articles par source.*
+
+![alt text](Dashboard_BI/chart2.png)
+*Les 10 mots-clés les plus fréquents.*
+
+![alt text](Dashboard_BI/chart3.png)
+*Progression historique des publications.*
+
+### Analyses Spécifiques par Domaine
+![alt text](Dashboard_BI/chart5.png)
+*Focus sur l'évolution du Data Mining.*
+
+![alt text](Dashboard_BI/chart6.png)
+*Focus sur l'évolution de l'Intelligence Artificielle.*
+
+![alt text](Dashboard_BI/chart7.png)
+*Focus sur l'évolution du Deep Learning.*
+
+### Collaborations et Auteurs
+![alt text](Dashboard_BI/chart4.png)
+*Classement des auteurs les plus prolifiques.*
+
+## Technologies utilisées
+
+- Python (Streamlit, Pandas, Plotly)
+- MongoDB (Base de données NoSQL)
+- PyMongo (Driver de connexion)
+
+## Installation
+
+1. Assurez-vous d'avoir MongoDB installé et configuré.
+2. Installez les dépendances nécessaires :
+   ```bash
+   pip install -r requirements.txt
+
+
+## Screen pour freamwork complet par streamlit 
+<img width="1203" height="697" alt="screen-app1" src="https://github.com/user-attachments/assets/278b4e18-fcf8-4028-b533-849b51853834" />
+
+<img width="1202" height="685" alt="Screen-app2" src="https://github.com/user-attachments/assets/7588dcb0-95cf-4d87-b4d5-2d601a907290" />
+
+<img width="1190" height="647" alt="screen-app3" src="https://github.com/user-attachments/assets/3d3a7b5b-6bab-4406-a85e-093d2613a0ab" />
+
+<img width="1202" height="632" alt="screen-app4" src="https://github.com/user-attachments/assets/271cdfe5-c364-4144-8e86-d1e83776578c" />
+
+<img width="1205" height="672" alt="screen-app5" src="https://github.com/user-attachments/assets/16ba5a4d-7977-4707-8658-2f4976bdd434" />
+
+<img width="1195" height="653" alt="screen-app6" src="https://github.com/user-attachments/assets/9d97b84f-4ffd-41e0-844c-5019cc6c2b09" />
+
+<img width="1201" height="672" alt="screen-app7" src="https://github.com/user-attachments/assets/22548367-b651-44f0-aef7-aea43a78e852" />
+
+    - remarque : video freamwork_streamlit (1).mp4 contient l'app complet 
+
+
+
 ## 📝 License
 
 Educational use only. Respect robots.txt and terms of service.
