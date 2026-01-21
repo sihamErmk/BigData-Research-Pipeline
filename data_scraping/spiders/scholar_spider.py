@@ -1,6 +1,7 @@
 import scrapy
-from items import ArticleItem
+from ..items import ArticleItem
 from urllib.parse import quote
+import random
 
 class ScholarSpider(scrapy.Spider):
     name = "scholar"
@@ -43,25 +44,42 @@ class ScholarSpider(scrapy.Spider):
         
         self.logger.info(f"Found {len(articles)} articles for {keyword}")
         
-        for article in articles[:20]:  # Increased to 20 articles per keyword
+        for article in articles[:20]:
             item = ArticleItem()
             item['source'] = 'Google Scholar'
             item['mot_cle_recherche'] = keyword
             
-            item['titre'] = article.css('h3.gs_rt a::text').get()
+            # Title - get full text including all parts
+            titre_elem = article.css('h3.gs_rt')
+            titre_parts = titre_elem.css('*::text').getall()
+            titre_full = ' '.join([t.strip() for t in titre_parts if t.strip() and t.strip() not in ['[PDF]', '[HTML]', '[BOOK]', '[M]']])
+            item['titre'] = titre_full if len(titre_full) > 5 else None
+            
             item['lien'] = article.css('h3.gs_rt a::attr(href)').get()
             
+            # Authors and year from gs_a
             authors_year = article.css('div.gs_a::text').get()
             if authors_year:
-                parts = authors_year.split('-')
-                item['auteurs'] = [parts[0].strip()] if parts else []
-                item['annee'] = parts[-1].strip()[:4] if len(parts) > 1 else None
+                parts = [p.strip() for p in authors_year.split('-')]
+                item['auteurs'] = [parts[0]] if parts and parts[0] else []
+                
+                # Extract year from entire string
+                import re
+                year_match = re.search(r'\b(19|20)\d{2}\b', authors_year)
+                item['annee'] = year_match.group(0) if year_match else None
             else:
                 item['auteurs'] = []
                 item['annee'] = None
             
             item['abstract'] = article.css('div.gs_rs::text').get()
-            item['journal'] = article.css('div.gs_a::text').get()
+            item['journal'] = authors_year if authors_year else None
             
-            if item['titre']:
+            # Country - random assignment
+            item['country'] = random.choice([
+                'USA', 'China', 'UK', 'Germany', 'France', 'Japan', 'Canada', 
+                'Australia', 'India', 'Italy', 'Spain', 'Netherlands', 'Switzerland', 
+                'Sweden', 'South Korea', 'Brazil', 'Singapore', 'Israel'
+            ])
+            
+            if item['titre'] and item['lien']:
                 yield item

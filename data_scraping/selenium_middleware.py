@@ -51,7 +51,7 @@ class SeleniumMiddleware:
     def process_request(self, request, spider):
         if request.meta.get('selenium'):
             # Comportement humain: délai aléatoire avant de charger
-            time.sleep(random.uniform(2, 5))
+            time.sleep(random.uniform(1, 2))
             
             self.driver.get(request.url)
             
@@ -60,7 +60,7 @@ class SeleniumMiddleware:
             max_captcha_wait = request.meta.get('max_captcha_wait', 60)
             
             # Attendre le chargement initial
-            time.sleep(random.uniform(3, 6))
+            time.sleep(random.uniform(2, 3))
             
             # Accepter les cookies si présent
             try:
@@ -116,7 +116,7 @@ class SeleniumMiddleware:
                 except:
                     spider.logger.warning(f"Timeout waiting for '{wait_selector}' on {request.url}")
             
-            time.sleep(random.uniform(2, 4))
+            time.sleep(random.uniform(1, 2))
             
             return HtmlResponse(
                 self.driver.current_url,

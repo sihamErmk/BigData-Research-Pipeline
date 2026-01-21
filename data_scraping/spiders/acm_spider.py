@@ -1,5 +1,5 @@
 import scrapy
-from items import ArticleItem
+from ..items import ArticleItem
 
 class AcmSpider(scrapy.Spider):
     name = "acm"

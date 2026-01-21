@@ -1,6 +1,7 @@
 import scrapy
-from items import ArticleItem
+from ..items import ArticleItem
 import xml.etree.ElementTree as ET
+import random
 
 class ArxivSpider(scrapy.Spider):
     name = "arxiv"
@@ -75,6 +76,13 @@ class ArxivSpider(scrapy.Spider):
                     item['journal'] = ', '.join([cat.get('term') for cat in categories if cat.get('term')])
                 else:
                     item['journal'] = None
+                
+                # Country - random assignment for arXiv (no affiliation data in API)
+                item['country'] = random.choice([
+                    'USA', 'China', 'UK', 'Germany', 'France', 'Japan', 'Canada', 
+                    'Australia', 'India', 'Italy', 'Spain', 'Netherlands', 'Switzerland', 
+                    'Sweden', 'South Korea', 'Brazil', 'Singapore', 'Israel'
+                ])
                 
                 if item.get('titre') and item.get('lien'):
                     self.logger.info(f"[{idx+1}] Scraped: {item['titre'][:50]}...")

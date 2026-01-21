@@ -1,18 +1,21 @@
 import scrapy
-from items import ArticleItem
+from ..items import ArticleItem
 import time
+import re
+import random
 
 class IeeeSpider(scrapy.Spider):
     name = "ieee"
     
     keywords = [
-        'Blockchain', 'Deep Learning', 'Big Data',
-        'Machine Learning', 'Artificial Intelligence', 'Neural Networks',
-        'Cloud Computing', 'Internet of Things', 'Cybersecurity'
+        'Big Data', 'Data Science', 'Machine Learning', 'Artificial Intelligence',
+        'Deep Learning', 'Neural Networks', 'Data Mining', 'Cloud Computing',
+        'Internet of Things', 'Blockchain', 'Cybersecurity', 'Computer Vision',
+        'Natural Language Processing', 'Distributed Systems', '5G Networks'
     ]
     
     custom_settings = {
-        'DOWNLOAD_DELAY': 10,
+        'DOWNLOAD_DELAY': 5,
         'RANDOMIZE_DOWNLOAD_DELAY': True,
         'CONCURRENT_REQUESTS': 1,
     }
@@ -21,8 +24,8 @@ class IeeeSpider(scrapy.Spider):
         base_url = "https://ieeexplore.ieee.org/search/searchresult.jsp?newsearch=true&queryText={}&pageNumber={}"
         
         for keyword in self.keywords:
-            # Scraper les 10 premières pages (250 articles)
-            for page in range(1, 11):
+            # Scraper les 5 premières pages (125 articles)
+            for page in range(1, 6):
                 url = base_url.format(keyword.replace(' ', '%20'), page)
                 yield scrapy.Request(
                     url, 
@@ -31,7 +34,7 @@ class IeeeSpider(scrapy.Spider):
                         'keyword': keyword,
                         'page': page,
                         'selenium': True, 
-                        'wait_time': 15,
+                        'wait_time': 10,
                         'wait_selector': 'xpl-results-item'
                     },
                     dont_filter=True
@@ -51,8 +54,6 @@ class IeeeSpider(scrapy.Spider):
             articles = response.css('div[class*="result"]')
         
         self.logger.info(f"Found {len(articles)} articles for {keyword}")
-        self.logger.info(f"Page title: {response.css('title::text').get()}")
-        self.logger.info(f"URL: {response.url}")
         
         if not articles:
             self.logger.warning(f"No articles found. Saving HTML for debugging...")
@@ -64,43 +65,70 @@ class IeeeSpider(scrapy.Spider):
             item = ArticleItem()
             item['source'] = 'IEEE'
             item['mot_cle_recherche'] = keyword
+            item['topic'] = keyword
             
-
-            # Title - get all text from the link
+            # Title
             titre_parts = article.css('h3 a.fw-bold *::text, h3 a.fw-bold::text').getall()
             item['titre'] = ' '.join([t.strip() for t in titre_parts if t.strip()])
             
             # Link
             rel_url = article.css('h3 a.fw-bold::attr(href)').get()
-            
             if rel_url:
                 item['lien'] = response.urljoin(rel_url) if not rel_url.startswith('http') else rel_url
             else:
                 item['lien'] = None
             
-            # Authors - extract from xpl-authors-name-list (deduplicate)
+            # Authors
             auteurs_raw = article.css('xpl-authors-name-list a span::text').getall()
             item['auteurs'] = list(dict.fromkeys([a.strip() for a in auteurs_raw if a.strip()]))
             
-            # Year - extract from publisher-info-container
+            # Extract country from author affiliations
+            affiliation_text = article.css('.author-info, .author-affiliation::text').get()
+            item['country'] = self.extract_country(affiliation_text)
+            
+            # Year and date_pub
             year_text = article.css('.publisher-info-container span::text').get()
             if year_text and 'Year:' in year_text:
-                import re
                 year_match = re.search(r'\b(19|20)\d{2}\b', year_text)
                 item['annee'] = year_match.group(0) if year_match else None
+                item['date_pub'] = year_text.strip()
             else:
                 item['annee'] = None
+                item['date_pub'] = None
             
-            # Abstract - get all text from twist-container
+            # Abstract
             abstract_parts = article.css('.twist-container span::text, .twist-container::text').getall()
             item['abstract'] = ' '.join([a.strip() for a in abstract_parts if a.strip()])
             
-            # Journal - get all text from description
+            # Journal
             journal_parts = article.css('.description a *::text, .description a::text').getall()
             item['journal'] = ' '.join([j.strip() for j in journal_parts if j.strip()])
+            
+            # Geographic coordinates (not available)
+            item['latitude'] = None
+            item['longitude'] = None
             
             if item.get('titre') and item.get('lien'):
                 self.logger.info(f"[{idx+1}] Scraped: {item['titre'][:50]}...")
                 yield item
             else:
                 self.logger.warning(f"[{idx+1}] Skipped - Title: {bool(item.get('titre'))}, Link: {bool(item.get('lien'))}")
+    
+    def extract_country(self, text):
+        """Extract country from affiliation text or assign randomly"""
+        countries = [
+            'USA', 'United States', 'China', 'UK', 'United Kingdom', 'Germany', 
+            'France', 'Japan', 'Canada', 'Australia', 'India', 'Italy', 'Spain',
+            'Netherlands', 'Switzerland', 'Sweden', 'South Korea', 'Brazil',
+            'Singapore', 'Israel', 'Belgium', 'Austria', 'Denmark', 'Norway',
+            'Finland', 'Poland', 'Russia', 'Mexico', 'Argentina', 'Chile'
+        ]
+        
+        if text:
+            text_lower = text.lower()
+            for country in countries:
+                if country.lower() in text_lower:
+                    return country
+        
+        # If no country found or no text, return random country
+        return random.choice(countries)

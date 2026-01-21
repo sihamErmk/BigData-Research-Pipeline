@@ -10,3 +10,9 @@ class ArticleItem(scrapy.Item):
     abstract = scrapy.Field()
     journal = scrapy.Field()
     date_scraping = scrapy.Field()
+    # Additional IEEE fields
+    country = scrapy.Field()
+    topic = scrapy.Field()
+    latitude = scrapy.Field()
+    longitude = scrapy.Field()
+    date_pub = scrapy.Field()
