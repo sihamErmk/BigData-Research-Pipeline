@@ -1,6 +1,6 @@
 """
 Application Streamlit Complète pour Big Data Research Pipeline
-Avec intégration de l'analyse Spark - VERSION CORRIGÉE
+Avec intégration de l'analyse Spark et Cartographie Géographique
 """
 
 import streamlit as st
@@ -58,6 +58,78 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
+# ================================================================================
+# DONNÉES GÉOGRAPHIQUES - Coordonnées des pays
+# ================================================================================
+COUNTRY_COORDS = {
+    'USA': {'lat': 37.0902, 'lon': -95.7129, 'name': 'United States'},
+    'United States': {'lat': 37.0902, 'lon': -95.7129, 'name': 'United States'},
+    'China': {'lat': 35.8617, 'lon': 104.1954, 'name': 'China'},
+    'UK': {'lat': 55.3781, 'lon': -3.4360, 'name': 'United Kingdom'},
+    'United Kingdom': {'lat': 55.3781, 'lon': -3.4360, 'name': 'United Kingdom'},
+    'Germany': {'lat': 51.1657, 'lon': 10.4515, 'name': 'Germany'},
+    'France': {'lat': 46.2276, 'lon': 2.2137, 'name': 'France'},
+    'Japan': {'lat': 36.2048, 'lon': 138.2529, 'name': 'Japan'},
+    'Canada': {'lat': 56.1304, 'lon': -106.3468, 'name': 'Canada'},
+    'Australia': {'lat': -25.2744, 'lon': 133.7751, 'name': 'Australia'},
+    'India': {'lat': 20.5937, 'lon': 78.9629, 'name': 'India'},
+    'Italy': {'lat': 41.8719, 'lon': 12.5674, 'name': 'Italy'},
+    'Spain': {'lat': 40.4637, 'lon': -3.7492, 'name': 'Spain'},
+    'Netherlands': {'lat': 52.1326, 'lon': 5.2913, 'name': 'Netherlands'},
+    'Switzerland': {'lat': 46.8182, 'lon': 8.2275, 'name': 'Switzerland'},
+    'Sweden': {'lat': 60.1282, 'lon': 18.6435, 'name': 'Sweden'},
+    'South Korea': {'lat': 35.9078, 'lon': 127.7669, 'name': 'South Korea'},
+    'Brazil': {'lat': -14.2350, 'lon': -51.9253, 'name': 'Brazil'},
+    'Singapore': {'lat': 1.3521, 'lon': 103.8198, 'name': 'Singapore'},
+    'Israel': {'lat': 31.0461, 'lon': 34.8516, 'name': 'Israel'},
+    'Belgium': {'lat': 50.5039, 'lon': 4.4699, 'name': 'Belgium'},
+    'Austria': {'lat': 47.5162, 'lon': 14.5501, 'name': 'Austria'},
+    'Denmark': {'lat': 56.2639, 'lon': 9.5018, 'name': 'Denmark'},
+    'Norway': {'lat': 60.4720, 'lon': 8.4689, 'name': 'Norway'},
+    'Finland': {'lat': 61.9241, 'lon': 25.7482, 'name': 'Finland'},
+    'Poland': {'lat': 51.9194, 'lon': 19.1451, 'name': 'Poland'},
+    'Russia': {'lat': 61.5240, 'lon': 105.3188, 'name': 'Russia'},
+    'Mexico': {'lat': 23.6345, 'lon': -102.5528, 'name': 'Mexico'},
+    'Argentina': {'lat': -38.4161, 'lon': -63.6167, 'name': 'Argentina'},
+    'Chile': {'lat': -35.6751, 'lon': -71.5430, 'name': 'Chile'},
+}
+
+def normalize_country_name(country):
+    """Normalise les noms de pays"""
+    if not country:
+        return None
+    
+    # Mapping des variations
+    mappings = {
+        'USA': 'United States',
+        'UK': 'United Kingdom',
+    }
+    
+    return mappings.get(country, country)
+
+def get_country_stats(df):
+    """Calcule les statistiques par pays avec coordonnées géographiques"""
+    if 'country' not in df.columns:
+        return pd.DataFrame()
+    
+    # Normaliser les noms de pays
+    df_copy = df.copy()
+    df_copy['country_normalized'] = df_copy['country'].apply(normalize_country_name)
+    
+    # Compter les publications par pays
+    country_counts = df_copy['country_normalized'].value_counts().reset_index()
+    country_counts.columns = ['country', 'publications']
+    
+    # Ajouter les coordonnées géographiques
+    country_counts['lat'] = country_counts['country'].map(lambda x: COUNTRY_COORDS.get(x, {}).get('lat'))
+    country_counts['lon'] = country_counts['country'].map(lambda x: COUNTRY_COORDS.get(x, {}).get('lon'))
+    country_counts['name'] = country_counts['country'].map(lambda x: COUNTRY_COORDS.get(x, {}).get('name', x))
+    
+    # Supprimer les pays sans coordonnées
+    country_counts = country_counts.dropna(subset=['lat', 'lon'])
+    
+    return country_counts
 
 # ================================================================================
 # CONNEXION MONGODB
@@ -151,7 +223,7 @@ def run_spider(spider_name):
         return None
 
 # ================================================================================
-# LANCER L'ANALYSE SPARK - VERSION CORRIGÉE
+# LANCER L'ANALYSE SPARK
 # ================================================================================
 def run_spark_analysis():
     script_path = os.path.expanduser("~/BigData-Research-Pipeline/DataAnalysis/scripts")
@@ -162,7 +234,6 @@ def run_spark_analysis():
         return None
     
     try:
-        # Version corrigée avec le bon connecteur MongoDB
         process = subprocess.Popen(
             [
                 "spark-submit",
@@ -193,7 +264,8 @@ with st.sidebar:
         [
             "Accueil", 
             "Scraping", 
-            "Dashboard BI", 
+            "Dashboard BI",
+            "Cartographie Mondiale",
             "Analyse Spark",
             "Analyses Avancees", 
             "Configuration"
@@ -273,7 +345,7 @@ if page == "Accueil":
         
         if 'source' in df.columns:
             fig = px.pie(df, names='source', title='Distribution par Source')
-            st.plotly_chart(fig, width='stretch')
+            st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("Aucune donnee disponible. Lancez un scraping pour commencer!")
 
@@ -401,7 +473,7 @@ elif page == "Dashboard BI":
                     title="Distribution par Source",
                     hole=0.4
                 )
-                st.plotly_chart(fig, width='stretch')
+                st.plotly_chart(fig, use_container_width=True)
         
         with col2:
             if 'mot_cle_recherche' in df.columns:
@@ -412,7 +484,7 @@ elif page == "Dashboard BI":
                     orientation='h',
                     title="Top 10 Mots-cles"
                 )
-                st.plotly_chart(fig, width='stretch')
+                st.plotly_chart(fig, use_container_width=True)
         
         if 'annee' in df.columns:
             st.subheader("Evolution Temporelle")
@@ -428,7 +500,7 @@ elif page == "Dashboard BI":
                     markers=True,
                     title="Publications par Annee"
                 )
-                st.plotly_chart(fig, width='stretch')
+                st.plotly_chart(fig, use_container_width=True)
         
         if 'auteurs' in df.columns:
             st.subheader("Top 20 Auteurs")
@@ -448,7 +520,7 @@ elif page == "Dashboard BI":
                     y='Auteur',
                     orientation='h'
                 )
-                st.plotly_chart(fig, width='stretch')
+                st.plotly_chart(fig, use_container_width=True)
         
         st.subheader("Table des Donnees")
         
@@ -456,10 +528,233 @@ elif page == "Dashboard BI":
         available_columns = [col for col in display_columns if col in df.columns]
         
         if available_columns:
-            st.dataframe(df[available_columns].head(50), width='stretch', height=400)
+            st.dataframe(df[available_columns].head(50), use_container_width=True, height=400)
 
 # ================================================================================
-# PAGE 4: ANALYSE SPARK
+# PAGE 4: CARTOGRAPHIE MONDIALE
+# ================================================================================
+elif page == "Cartographie Mondiale":
+    st.title(" Cartographie Mondiale des Publications")
+    st.markdown("### Visualisation géographique de la recherche scientifique")
+    
+    df = load_data()
+    
+    if df.empty:
+        st.warning("Aucune donnee disponible.")
+    elif 'country' not in df.columns:
+        st.warning("Les données de pays ne sont pas disponibles dans la base de données.")
+    else:
+        # Obtenir les statistiques par pays
+        country_stats = get_country_stats(df)
+        
+        if country_stats.empty:
+            st.warning("Aucune donnée géographique disponible.")
+        else:
+            # Métriques globales
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("Total Publications", len(df))
+            with col2:
+                st.metric("Pays Représentés", len(country_stats))
+            with col3:
+                top_country = country_stats.iloc[0]
+                st.metric("1er Pays", f"{top_country['name']}")
+            with col4:
+                st.metric("Publications 1er", int(top_country['publications']))
+            
+            st.divider()
+            
+            # Carte mondiale interactive
+            st.subheader("Carte Mondiale des Publications")
+            
+            fig_map = px.scatter_geo(
+                country_stats,
+                lat='lat',
+                lon='lon',
+                size='publications',
+                hover_name='name',
+                hover_data={
+                    'publications': True,
+                    'lat': False,
+                    'lon': False
+                },
+                size_max=50,
+                color='publications',
+                color_continuous_scale='Viridis',
+                projection='natural earth',
+                title='Distribution Géographique des Publications Scientifiques'
+            )
+            
+            fig_map.update_layout(
+                height=600,
+                geo=dict(
+                    showland=True,
+                    landcolor='rgb(243, 243, 243)',
+                    coastlinecolor='rgb(204, 204, 204)',
+                    showocean=True,
+                    oceancolor='rgb(230, 245, 255)',
+                    showcountries=True,
+                    countrycolor='rgb(204, 204, 204)'
+                )
+            )
+            
+            st.plotly_chart(fig_map, use_container_width=True)
+            
+            st.divider()
+            
+            # Visualisations complémentaires
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("Top 15 Pays Producteurs")
+                
+                top_15 = country_stats.head(15)
+                
+                fig_bar = px.bar(
+                    top_15,
+                    x='publications',
+                    y='name',
+                    orientation='h',
+                    color='publications',
+                    color_continuous_scale='Blues',
+                    title='Classement des Pays par Nombre de Publications'
+                )
+                
+                fig_bar.update_layout(
+                    yaxis={'categoryorder': 'total ascending'},
+                    showlegend=False,
+                    height=500
+                )
+                
+                st.plotly_chart(fig_bar, use_container_width=True)
+            
+            with col2:
+                st.subheader("Distribution par Continent")
+                
+                # Classifier les pays par continent (simplifié)
+                continent_mapping = {
+                    'United States': 'Amérique du Nord',
+                    'Canada': 'Amérique du Nord',
+                    'Mexico': 'Amérique du Nord',
+                    'Brazil': 'Amérique du Sud',
+                    'Argentina': 'Amérique du Sud',
+                    'Chile': 'Amérique du Sud',
+                    'United Kingdom': 'Europe',
+                    'Germany': 'Europe',
+                    'France': 'Europe',
+                    'Italy': 'Europe',
+                    'Spain': 'Europe',
+                    'Netherlands': 'Europe',
+                    'Switzerland': 'Europe',
+                    'Sweden': 'Europe',
+                    'Belgium': 'Europe',
+                    'Austria': 'Europe',
+                    'Denmark': 'Europe',
+                    'Norway': 'Europe',
+                    'Finland': 'Europe',
+                    'Poland': 'Europe',
+                    'Russia': 'Europe',
+                    'China': 'Asie',
+                    'Japan': 'Asie',
+                    'India': 'Asie',
+                    'South Korea': 'Asie',
+                    'Singapore': 'Asie',
+                    'Israel': 'Asie',
+                    'Australia': 'Océanie'
+                }
+                
+                country_stats['continent'] = country_stats['name'].map(
+                    lambda x: continent_mapping.get(x, 'Autre')
+                )
+                
+                continent_stats = country_stats.groupby('continent')['publications'].sum().reset_index()
+                continent_stats = continent_stats.sort_values('publications', ascending=False)
+                
+                fig_pie = px.pie(
+                    continent_stats,
+                    values='publications',
+                    names='continent',
+                    title='Répartition par Continent',
+                    hole=0.4,
+                    color_discrete_sequence=px.colors.qualitative.Set3
+                )
+                
+                fig_pie.update_layout(height=500)
+                
+                st.plotly_chart(fig_pie, use_container_width=True)
+            
+            st.divider()
+            
+            # Table détaillée par pays
+            st.subheader(" Statistiques Détaillées par Pays")
+            
+            # Filtres
+            col1, col2 = st.columns([1, 3])
+            
+            with col1:
+                min_pubs = st.slider(
+                    "Publications minimum",
+                    min_value=1,
+                    max_value=int(country_stats['publications'].max()),
+                    value=1
+                )
+            
+            # Filtrer et afficher
+            filtered_stats = country_stats[country_stats['publications'] >= min_pubs].copy()
+            filtered_stats = filtered_stats.sort_values('publications', ascending=False)
+            
+            # Calculer le pourcentage
+            total_pubs = filtered_stats['publications'].sum()
+            filtered_stats['percentage'] = (filtered_stats['publications'] / total_pubs * 100).round(2)
+            
+            # Formater pour l'affichage
+            display_df = filtered_stats[['name', 'publications', 'percentage', 'continent']].copy()
+            display_df.columns = ['Pays', 'Publications', '%', 'Continent']
+            display_df.index = range(1, len(display_df) + 1)
+            
+            st.dataframe(
+                display_df,
+                use_container_width=True,
+                height=400
+            )
+            
+            # Carte de chaleur par année et pays (si données d'année disponibles)
+            if 'annee' in df.columns:
+                st.divider()
+                st.subheader(" Evolution Temporelle par Pays")
+                
+                # Préparer les données
+                df_with_country = df[df['country'].notna()].copy()
+                df_with_country['country_normalized'] = df_with_country['country'].apply(normalize_country_name)
+                
+                # Filtrer les pays principaux
+                top_countries = country_stats.head(10)['name'].tolist()
+                df_filtered = df_with_country[df_with_country['country_normalized'].isin(top_countries)]
+                
+                if not df_filtered.empty and df_filtered['annee'].notna().sum() > 0:
+                    # Créer le pivot
+                    heatmap_data = df_filtered.groupby(['country_normalized', 'annee']).size().reset_index(name='count')
+                    heatmap_pivot = heatmap_data.pivot(
+                        index='country_normalized',
+                        columns='annee',
+                        values='count'
+                    ).fillna(0)
+                    
+                    fig_heatmap = px.imshow(
+                        heatmap_pivot,
+                        labels=dict(x="Année", y="Pays", color="Publications"),
+                        aspect="auto",
+                        title="Evolution des Publications par Pays (Top 10)",
+                        color_continuous_scale='YlOrRd'
+                    )
+                    
+                    fig_heatmap.update_layout(height=500)
+                    
+                    st.plotly_chart(fig_heatmap, use_container_width=True)
+
+# ================================================================================
+# PAGE 5: ANALYSE SPARK
 # ================================================================================
 elif page == "Analyse Spark":
     st.title("Analyse Big Data avec Apache Spark")
@@ -556,8 +851,8 @@ elif page == "Analyse Spark":
                     markers=True,
                     title="Evolution des Publications"
                 )
-                st.plotly_chart(fig, width='stretch')
-                st.dataframe(pub_annee, width='stretch')
+                st.plotly_chart(fig, use_container_width=True)
+                st.dataframe(pub_annee, use_container_width=True)
             
             if 'evolution_categorie' in results:
                 st.subheader("Evolution par Categorie")
@@ -572,7 +867,7 @@ elif page == "Analyse Spark":
                     markers=True,
                     title="Tendances par Categorie"
                 )
-                st.plotly_chart(fig, width='stretch')
+                st.plotly_chart(fig, use_container_width=True)
                 
                 pivot_data = evolution.pivot(
                     index='categorie',
@@ -586,7 +881,7 @@ elif page == "Analyse Spark":
                     aspect="auto",
                     title="Heatmap Categorie-Annee"
                 )
-                st.plotly_chart(fig_heat, width='stretch')
+                st.plotly_chart(fig_heat, use_container_width=True)
         
         with tab2:
             col1, col2 = st.columns(2)
@@ -604,8 +899,8 @@ elif page == "Analyse Spark":
                         orientation='h',
                         title="Distribution par Categorie"
                     )
-                    st.plotly_chart(fig, width='stretch')
-                    st.dataframe(pub_cat, width='stretch')
+                    st.plotly_chart(fig, use_container_width=True)
+                    st.dataframe(pub_cat, use_container_width=True)
             
             with col2:
                 if 'publications_source' in results:
@@ -620,8 +915,8 @@ elif page == "Analyse Spark":
                         hole=0.4,
                         title="Repartition par Source"
                     )
-                    st.plotly_chart(fig, width='stretch')
-                    st.dataframe(pub_source, width='stretch')
+                    st.plotly_chart(fig, use_container_width=True)
+                    st.dataframe(pub_source, use_container_width=True)
         
         with tab3:
             if 'top_auteurs' in results:
@@ -636,8 +931,8 @@ elif page == "Analyse Spark":
                     orientation='h',
                     title="Top 20 Auteurs"
                 )
-                st.plotly_chart(fig, width='stretch')
-                st.dataframe(top_auteurs, width='stretch', height=400)
+                st.plotly_chart(fig, use_container_width=True)
+                st.dataframe(top_auteurs, use_container_width=True, height=400)
         
         with tab4:
             col1, col2 = st.columns(2)
@@ -655,8 +950,8 @@ elif page == "Analyse Spark":
                         orientation='h',
                         title="Categories Emergentes"
                     )
-                    st.plotly_chart(fig, width='stretch')
-                    st.dataframe(tendances, width='stretch')
+                    st.plotly_chart(fig, use_container_width=True)
+                    st.dataframe(tendances, use_container_width=True)
             
             with col2:
                 if 'signaux_faibles' in results:
@@ -673,11 +968,11 @@ elif page == "Analyse Spark":
                         color_continuous_scale='RdYlGn',
                         title="Croissance par Categorie (%)"
                     )
-                    st.plotly_chart(fig, width='stretch')
-                    st.dataframe(signaux, width='stretch')
+                    st.plotly_chart(fig, use_container_width=True)
+                    st.dataframe(signaux, use_container_width=True)
 
 # ================================================================================
-# PAGE 5: ANALYSES AVANCÉES
+# PAGE 6: ANALYSES AVANCÉES
 # ================================================================================
 elif page == "Analyses Avancees":
     st.title("Analyses Avancees")
@@ -716,7 +1011,7 @@ elif page == "Analyses Avancees":
                     
                     if len(year_trend) > 0:
                         fig = px.area(year_trend, x='annee', y='count', title=f"Evolution - {selected_keyword}")
-                        st.plotly_chart(fig, width='stretch')
+                        st.plotly_chart(fig, use_container_width=True)
         
         with tab2:
             if 'auteurs' in df.columns:
@@ -737,10 +1032,10 @@ elif page == "Analyses Avancees":
                     
                     fig = px.bar(collab_df, x='Publications', y='Collaboration', 
                                 orientation='h', title="Top Collaborations")
-                    st.plotly_chart(fig, width='stretch')
+                    st.plotly_chart(fig, use_container_width=True)
 
 # ================================================================================
-# PAGE 6: CONFIGURATION
+# PAGE 7: CONFIGURATION
 # ================================================================================
 elif page == "Configuration":
     st.title("Configuration")
@@ -806,5 +1101,3 @@ elif page == "Configuration":
         df = load_data()
         st.write("**Articles en base:**", len(df))
         st.write("**Derniere MAJ:**", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-
